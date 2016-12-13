@@ -1,0 +1,11 @@
+{
+  "name": "aws-scale",
+  "description": "In Development - A simple module for grouping and scaling AWS resources together.",
+  "version": "0.0.1",
+  "scripts": {
+    "start": ""
+  },
+  "dependencies": {
+    "aws-sdk": "^2.7.13"
+  }
+}
