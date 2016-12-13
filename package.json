@@ -3,9 +3,15 @@
   "description": "In Development - A simple module for grouping and scaling AWS resources together.",
   "version": "0.0.1",
   "scripts": {
-    "start": ""
+    "start": "",
+    "test": "mocha"
   },
   "dependencies": {
     "aws-sdk": "^2.7.13"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.2.0",
+    "sinon": "^1.17.6"
   }
 }
