@@ -1,21 +1,33 @@
 'use strict';
 
-module.exports = function () {
-  var resources = [];
+var DynamoDB = require('./resources/DynamoDB');
 
-  function _add(resource) {
+/**
+ *
+ * @constructor
+ */
+var ResourceSet = function () {
+  this.resources = [];
+};
 
+ResourceSet.prototype.add = function (resource) {
+  if (resource instanceof DynamoDB) {
+    this.resources.push(resource);
+  } else {
+    throw new Error('ResourceSet.add must be passed a valid resource object.');
   }
+};
 
-  /**
-   *
-   * @private
-   */
-  function _scale() {
+ResourceSet.prototype.getResources = function () {
+  return this.resources;
+};
 
-  }
+/**
+ *
+ * @private
+ */
+function _scale() {
 
-  return {
-    scale: _scale
-  };
 }
+
+module.exports = ResourceSet;
