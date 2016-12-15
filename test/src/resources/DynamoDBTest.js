@@ -18,10 +18,6 @@ describe('DynamoDB', function () {
       assert.isFunction(DynamoDB, 'module should be a function');
     });
 
-    it('should return an object', function () {
-      assert.isObject(DynamoDB(params), 'should return object');
-    });
-
   });
 
   describe('Constructor', function () {

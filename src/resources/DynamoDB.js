@@ -1,20 +1,23 @@
 'use strict';
 
-module.exports = function (paramObj) {
-  // Constructor
-  var params = paramObj;
-  if (typeof params !== 'object') {
+/**
+ *
+ * @param awsParams
+ * @constructor
+ */
+var DynamoDB = function (awsParams) {
+  if (typeof awsParams !== 'object') {
     throw new Error("Constructor requires parameter object.");
   }
-  if (typeof params.TableName !== 'string') {
+  if (typeof awsParams.TableName !== 'string') {
     throw new Error("Missing params.TableName.");
   }
 
-  function _getParams() {
-    return params;
-  }
-
-  return {
-    getParams: _getParams
-  };
+  this.params = awsParams;
 };
+
+DynamoDB.prototype.getParams = function () {
+  return this.params;
+};
+
+module.exports = DynamoDB;
