@@ -1,5 +1,7 @@
 'use strict';
 
+var AWS = require('aws-sdk');
+
 /**
  *
  * @param awsParams
@@ -18,6 +20,29 @@ var DynamoDB = function (awsParams) {
 
 DynamoDB.prototype.getParams = function () {
   return this.params;
+};
+
+DynamoDB.prototype.scale = function (callback) {
+  var self = this;
+  var dynamoDB = new AWS.DynamoDB();
+
+  console.log(this);
+
+  dynamoDB.updateTable(this.params, function (err) {
+    console.log(this);
+    var result = {
+      type: 'DynamoDB',
+      name: self.params.TableName,
+      status: 'success'
+    };
+
+    if (err) {
+      result.status = 'failure';
+      result.error = err;
+    }
+
+    callback(result);
+  });
 };
 
 module.exports = DynamoDB;
