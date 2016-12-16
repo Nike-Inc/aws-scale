@@ -26,10 +26,7 @@ DynamoDB.prototype.scale = function (callback) {
   var self = this;
   var dynamoDB = new AWS.DynamoDB();
 
-  console.log(this);
-
   dynamoDB.updateTable(this.params, function (err) {
-    console.log(this);
     var result = {
       type: 'DynamoDB',
       name: self.params.TableName,
