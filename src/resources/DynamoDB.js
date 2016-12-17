@@ -9,10 +9,10 @@ var AWS = require('aws-sdk');
  */
 var DynamoDB = function (awsParams) {
   if (typeof awsParams !== 'object') {
-    throw new Error("Constructor requires parameter object.");
+    throw new Error('Constructor requires a AWS JavaScript SDK DynamoDB.updateTable param object.');
   }
   if (typeof awsParams.TableName !== 'string') {
-    throw new Error("Missing params.TableName.");
+    throw new Error('Missing params.TableName.');
   }
 
   this.params = awsParams;

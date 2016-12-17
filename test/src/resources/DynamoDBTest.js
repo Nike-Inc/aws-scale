@@ -32,7 +32,7 @@ describe('DynamoDB', function () {
         new DynamoDB();
       }
 
-      assert.throws(test, 'Constructor requires parameter object.');
+      assert.throws(test, 'Constructor requires a AWS JavaScript SDK DynamoDB.updateTable param object.');
     });
 
     it('should require a DynamoDB table name in param object', function () {
@@ -119,7 +119,7 @@ describe('DynamoDB', function () {
         status: 'failure',
         error: {errorResponse: 'awsError'}
       };
-      assert.isTrue(callback.calledWith(expectedResult), 'should return successful result object.');
+      assert.isTrue(callback.calledWith(expectedResult), 'should return failure result object.');
     });
 
   });
