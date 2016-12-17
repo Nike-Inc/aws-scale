@@ -1,7 +1,22 @@
 {
   "name": "aws-scale",
   "description": "In Development - A simple module for grouping and scaling AWS resources together.",
-  "version": "0.0.1",
+  "version": "1.0.0",
+  "keywords": ["aws", "scaling", "autoscaling"],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/aaronbruckner/aws-scale/issues"
+  },
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/aaronbruckner/aws-scale"
+  },
+  "author": {
+    "name": "Aaron Bruckner",
+    "email": "aaronbruckner@gmail.com",
+    "url": "http://aaronbruckner.com/"
+  },
+  "main": "index.js",
   "scripts": {
     "start": "",
     "test": "mocha \"test/**/*.js\""
