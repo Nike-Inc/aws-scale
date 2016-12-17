@@ -3,8 +3,9 @@
 var AWS = require('aws-sdk');
 
 /**
+ * Scales an AWS auto scaling group.
  *
- * @param awsParams
+ * @param awsParams - parameter object for AWS SDK AutoScaling.setDesiredCapacity function.
  * @constructor
  */
 var AutoScaleGroup = function (awsParams) {
@@ -21,6 +22,21 @@ var AutoScaleGroup = function (awsParams) {
   this.params = awsParams;
 };
 
+/**
+ * Scales the underlying auto scaling group. When complete, invokes the callback with a result object.
+ * Object has the following structure:
+ *
+ * {
+ *     type: 'AutoScaleGroup',
+ *     name: <ASG-Name>,
+ *     status: <success || failure>
+ *
+ *     // If status == failure:
+ *     error: <error object from AWS SDK>
+ * }
+ *
+ * @param callback
+ */
 AutoScaleGroup.prototype.scale = function (callback) {
   var self = this;
   var autoScaling = new AWS.AutoScaling();
