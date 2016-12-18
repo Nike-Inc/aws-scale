@@ -55,7 +55,14 @@ exports.handler = function (event, context, callback) {
   resourceSet.add(new scale.AutoScaleGroup(asgParams));
   
   // Callback will be invoked after AWS responds to every scale request.
-  resourceSet.scale(callback);
+  resourceSet.scale(function (err) {
+    if (err) {
+      // CloudWatch hides arrays, this will print the entire array out for debugging purposes.
+      callback(JSON.stringify(err));
+    } else {
+      callback();
+    }
+  });
 };
 ```
 This allows you to schedule a single lambda function to scale down an entire application stack for the night.
@@ -150,6 +157,8 @@ err = [
 ];
 
 ```
+
+**Resource Parameter Objects**
 
 The parameter objects passed to the resources are directly passed to an AWS Javascript SDK call. The contract for
 each of these resource parameter objects can be found at:

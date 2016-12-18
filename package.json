@@ -1,8 +1,8 @@
 {
   "name": "aws-scale",
-  "description": "In Development - A simple module for grouping and scaling AWS resources together.",
+  "description": "A simple module for scaling AWS resources together.",
   "version": "1.0.0",
-  "keywords": ["aws", "scaling", "autoscaling"],
+  "keywords": ["aws", "scaling", "autoscaling", "DynamoDB", "Auto Scaling Group"],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/aaronbruckner/aws-scale/issues"
