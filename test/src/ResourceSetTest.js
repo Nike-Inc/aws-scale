@@ -4,6 +4,7 @@ var sinon = require('sinon');
 var assert = require('chai').assert;
 var ResourceSet = require('../../src/ResourceSet');
 var DynamoDB = require('../../src/resources/DynamoDB');
+var AutoScaleGroup = require('../../src/resources/AutoScaleGroup');
 
 describe('ResourceSet', function () {
 
@@ -43,6 +44,9 @@ describe('ResourceSet', function () {
       resourceSet.add(new DynamoDB({TableName: 'testTableName'}));
     });
 
+    it('should accept an AutoScaleGroup resource object', function () {
+      resourceSet.add(new AutoScaleGroup({AutoScalingGroupName: 'testASG', DesiredCapacity: 1}));
+    });
   });
 
   describe('getResources', function () {

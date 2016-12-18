@@ -1,6 +1,7 @@
 'use strict';
 
 var DynamoDB = require('./resources/DynamoDB');
+var AutoScaleGroup = require('./resources/AutoScaleGroup');
 
 /**
  * Manages and scales a set of AWS resources together. The ResourceSet scales all the resources and reports the final
@@ -18,7 +19,7 @@ var ResourceSet = function () {
  * @param resource - a resource object from the aws-scale library, not a full AWS SDK object.
  */
 ResourceSet.prototype.add = function (resource) {
-  if (resource instanceof DynamoDB) {
+  if (resource instanceof DynamoDB || resource instanceof AutoScaleGroup) {
     this.resources.push(resource);
   } else {
     throw new Error('ResourceSet.add must be passed a valid resource object.');
