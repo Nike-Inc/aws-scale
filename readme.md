@@ -197,10 +197,6 @@ This module is under active development and I'd like to add any helpful features
 github page to make any feature requests! Below are some of my next targets:
 
 * Add Kinesis stream scaling.
-* Add a AutoScale group minimum instance update option. If set, this would allow the resource to also update the 
-minimum number of instances allowed in the ASG before attempting to scale the ASG to that number. This could be useful
-because most Cloud Formation templates may have a minimum above zero (which would make sense for production ASGs but
-in test you may want to completely shut it down overnight).
 * Add scale progress mode. This allows you to scale a set of resources while aws-scale polls each resource and notifies
 you when all resources are finished scaling (and therefore ready for you to work on).
 
