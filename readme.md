@@ -1,4 +1,4 @@
-# Aws-Scale 
+# Aws-Scale [![Build Status](https://travis-ci.org/aaronbruckner/aws-scale.svg?branch=master)](https://travis-ci.org/aaronbruckner/aws-scale)
 ## A simple module for scaling AWS resources together.
 
 ### Problem
