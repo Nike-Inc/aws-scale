@@ -25,7 +25,8 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha \"test/**/*.js\"",
-    "coverage": "istanbul cover _mocha \"test/**/*.js\""
+    "coverage": "istanbul cover _mocha \"test/**/*.js\"",
+    "coveralls": "npm run coverage -- --report lcovonly && cat ./coverage/lcov.info | coveralls"
   },
   "dependencies": {
     "aws-sdk": "^2.7.13"
@@ -33,8 +34,10 @@
   "devDependencies": {
     "aws-sdk-mock": "^1.6.1",
     "chai": "^3.5.0",
+    "coveralls": "^2.11.15",
     "istanbul": "^0.4.5",
     "mocha": "^3.2.0",
+    "mocha-lcov-reporter": "^1.2.0",
     "sinon": "^1.17.6"
   }
 }
