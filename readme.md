@@ -169,6 +169,28 @@ each of these resource parameter objects can be found at:
 * scale.DynamoDB - AWS SDK DynamoDB.updateTable: http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB.html#updateTable-property
 * scale.AutoScaleGroup - AWS SDK AutoScaling.setDesiredCapacity: http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/AutoScaling.html#setDesiredCapacity-property
 
+**Non-AWS Parameter Features**
+
+The following resources have extra properties that can be set on the param object outside the scope of the AWS SDK:
+
+* scale.AutoScaleGroup
+    * param.setMinSize - if true, the auto scale group will have it's minimum number of instances set to params.DesiredCapacity
+    before the desired capacity update is made. This is useful to make sure the ASG can always be scaled to the number
+    of instances you want. Production CloudFormation scripts may want to enforce a minimum in production that can be ignored
+    in test.
+    
+    Example:
+    ```js
+    var asgParams = {
+      AutoScalingGroupName: 'expressWebServiceASG',
+      DesiredCapacity: 0,
+      setMinSize: true // Defaults to false
+    };
+    
+    // After scaling this resource, the ASG will have minimum size and desired capacity set to zero.
+    var asg = new scale.AutoScaleGroup(asgParams);
+    ```
+
 ### Feature Features
 
 This module is under active development and I'd like to add any helpful features you can think of. Please visit the 

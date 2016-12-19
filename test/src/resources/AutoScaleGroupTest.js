@@ -56,12 +56,15 @@ describe('AutoScaleGroup', function () {
     var asg;
     var callback;
     var desiredCapacitySpy;
+    var updateASGSpy;
 
     beforeEach(function () {
       asg = new AutoScaleGroup(params);
       callback = sinon.spy();
       desiredCapacitySpy = sinon.spy();
+      updateASGSpy = sinon.spy();
       AWS.mock('AutoScaling', 'setDesiredCapacity', desiredCapacitySpy);
+      AWS.mock('AutoScaling', 'updateAutoScalingGroup', updateASGSpy);
     });
 
     afterEach(function () {
@@ -102,6 +105,88 @@ describe('AutoScaleGroup', function () {
         error: {errorResponse: 'awsError'}
       };
       assert.isTrue(callback.calledWith(expectedResult), 'should return failure result object.');
+    });
+
+    describe('setMinSize feature', function () {
+
+      beforeEach(function () {
+        params.setMinSize = true;
+        asg = new AutoScaleGroup(params);
+      });
+
+      it('should update the auto scale group\'s min size if true before the scale attempt', function () {
+        asg.scale(callback);
+
+        assert.isFalse(desiredCapacitySpy.called, 'should not update desired capacity before min size update.');
+        assert.isTrue(updateASGSpy.calledOnce, 'should update the auto scale group.');
+        var expectedUpdateParams = {
+          AutoScalingGroupName: 'testASG',
+          MinSize: 1 // Matches desiredCapacity
+        };
+        assert.isTrue(updateASGSpy.calledWith(expectedUpdateParams, sinon.match.func), 'should update ASG with correct parameters');
+      });
+
+      it('should scale auto scale group after successfully changing min size', function () {
+        asg.scale(callback);
+
+        // Successful response from ASG min size update
+        updateASGSpy.callArgWith(1, null, {status: 'successfully updated ASG min size.'});
+
+        assert.isTrue(desiredCapacitySpy.calledOnce, 'should set desired capacity after update.');
+        var expectedParams = {
+          AutoScalingGroupName: 'testASG',
+          DesiredCapacity: 1 // Matches desiredCapacity
+        };
+        assert.isTrue(desiredCapacitySpy.calledWith(expectedParams, sinon.match.func), 'should update capacity with correct params.');
+      });
+
+      it('should return a success event after updating min size and desired capacity', function () {
+        asg.scale(callback);
+
+        // Successful response from ASG min size update
+        updateASGSpy.callArgWith(1, null, {status: 'successfully updated ASG min size.'});
+
+        assert.isFalse(callback.called, 'callback should not be invoked before response from AWS.');
+        desiredCapacitySpy.callArgWith(1, null, {response: 'success'});
+        assert.isTrue(callback.calledOnce, 'callback should be invoked once after return from AWS.');
+        var expectedResult = {
+          type: 'AutoScaleGroup',
+          name: 'testASG',
+          status: 'success'
+        };
+        assert.isTrue(callback.calledWith(expectedResult), 'should return successful result object.');
+      });
+
+      it('should return an error response if the min size update fails', function () {
+        asg.scale(callback);
+
+        updateASGSpy.callArgWith(1, {errorResponse: 'failed to change min size'});
+        assert.isTrue(callback.calledOnce, 'callback should be invoked once after return from AWS.');
+        var expectedResult = {
+          type: 'AutoScaleGroup',
+          name: 'testASG',
+          status: 'failure',
+          error: {errorResponse: 'failed to change min size'}
+        };
+        assert.isTrue(callback.calledWith(expectedResult), 'should return failure result object.');
+      });
+
+      it('should return an error response if the desired capacity update fails', function () {
+        asg.scale(callback);
+
+        updateASGSpy.callArgWith(1, null, {status: 'successfully updated ASG min size.'});
+        desiredCapacitySpy.callArgWith(1, {errorResponse: 'failed to update desired capacity'});
+
+        assert.isTrue(callback.calledOnce, 'callback should be invoked once after return from AWS.');
+        var expectedResult = {
+          type: 'AutoScaleGroup',
+          name: 'testASG',
+          status: 'failure',
+          error: {errorResponse: 'failed to update desired capacity'}
+        };
+        assert.isTrue(callback.calledWith(expectedResult), 'should return failure result object.');
+      });
+
     });
 
   });
