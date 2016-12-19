@@ -14,6 +14,8 @@ that automatically scale down resources at the end of the day or create node scr
 
 ### Usage
 
+To install: ```npm install aws-scale```
+
 Currently supported AWS resources:
 * DynamoDB
 * AutoScaling Groups
