@@ -2,14 +2,20 @@
   "name": "aws-scale",
   "description": "A simple module for scaling AWS resources together.",
   "version": "1.0.0",
-  "keywords": ["aws", "scaling", "autoscaling", "DynamoDB", "Auto Scaling Group"],
+  "keywords": [
+    "aws",
+    "scaling",
+    "autoscaling",
+    "DynamoDB",
+    "Auto Scaling Group"
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/aaronbruckner/aws-scale/issues"
   },
-  "repository" : {
-    "type" : "git",
-    "url" : "https://github.com/aaronbruckner/aws-scale"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aaronbruckner/aws-scale"
   },
   "author": {
     "name": "Aaron Bruckner",
@@ -18,8 +24,8 @@
   },
   "main": "index.js",
   "scripts": {
-    "start": "",
-    "test": "mocha \"test/**/*.js\""
+    "test": "mocha \"test/**/*.js\"",
+    "coverage": "istanbul cover _mocha \"test/**/*.js\""
   },
   "dependencies": {
     "aws-sdk": "^2.7.13"
@@ -27,6 +33,7 @@
   "devDependencies": {
     "aws-sdk-mock": "^1.6.1",
     "chai": "^3.5.0",
+    "istanbul": "^0.4.5",
     "mocha": "^3.2.0",
     "sinon": "^1.17.6"
   }
