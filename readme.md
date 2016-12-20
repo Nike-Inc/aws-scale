@@ -191,6 +191,22 @@ The following resources have extra feature properties that can be set on the par
     var asg = new scale.AutoScaleGroup(asgParams);
     ```
 
+**AWS Authorization**
+
+When running this library in lambda, you can use roles to grant the required permissions for the resources you are scaling.
+This link has details about modifying role permissions: http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_manage_modify.html.
+Below is a list of actions each resource needs to scale properly:
+
+* scale.DynamoDB: 
+    * Action "dynamodb:UpdateTable"
+* scale.AutoScaleGroup
+    * Action "autoscaling:UpdateAutoScalingGroup"
+    * Action "autoscaling:SetDesiredCapacity"
+
+When running this library locally from Node, the following explains how to set credentials: 
+http://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/setting-credentials-node.html.
+I recommend using the ~/.aws/credentials file: http://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/loading-node-credentials-shared.html.
+
 ### Feature Features
 
 This module is under active development and I'd like to add any helpful features you can think of. Please visit the 
