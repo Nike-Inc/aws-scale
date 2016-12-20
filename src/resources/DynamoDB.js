@@ -28,6 +28,59 @@ DynamoDB.prototype.getParams = function () {
 };
 
 /**
+ * Gets the status of the scaling operation on the table.
+ *
+ * @param {function} callback - invoked once the current scale status is confirmed. Returns the following result
+ * parameter:
+ * {
+ *     type: 'DynamoDB',
+ *     name: <DynamoTableName>,
+ *     status: <success || failure || pending>
+ *
+ *     // If status == pending:
+ *     message: 'Helpful message about scaling progress.'
+ *
+ *     // If status == failure:
+ *     error: <error object from AWS SDK>
+ * }
+ *
+ */
+DynamoDB.prototype.getScalingProgress = function(callback) {
+  var self = this;
+  var dynamoDB = new AWS.DynamoDB();
+
+  dynamoDB.describeTable({TableName: this.params.TableName}, function (err, data) {
+    var result = {
+      type: 'DynamoDB',
+      name: self.params.TableName
+    };
+
+    if (err) {
+      result.status = 'failure';
+      result.error = err;
+      return callback(result);
+    }
+
+    switch (data.Table.TableStatus) {
+      case 'UPDATING':
+        result.status = 'pending';
+        result.message = 'TableStatus: UPDATING';
+        break;
+      case 'ACTIVE':
+        result.status = 'success';
+        break;
+      case 'CREATING':
+      case 'DELETING':
+        result.status = 'failure';
+        result.error = 'Unexpected TableStatus: ' + data.Table.TableStatus;
+        break;
+    }
+
+    callback(result);
+  });
+};
+
+/**
  * Scales the underlying dynamoDB table. When complete, invokes the callback with a result object.
  * Object has the following structure:
  *

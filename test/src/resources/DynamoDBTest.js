@@ -7,7 +7,11 @@ var DynamoDB = require('../../../src/resources/DynamoDB');
 describe('DynamoDB', function () {
 
   var params;
+  var callback;
+  var dynamoDB;
+
   beforeEach(function () {
+    callback = sinon.spy();
     params = {
       TableName: 'testTableName',
       ProvisionedThroughput: {
@@ -15,6 +19,11 @@ describe('DynamoDB', function () {
         WriteCapacityUnits: 1
       }
     };
+    dynamoDB = new DynamoDB(params);
+  });
+
+  afterEach(function () {
+    AWS.restore();
   });
 
   describe('module', function () {
@@ -70,21 +79,113 @@ describe('DynamoDB', function () {
 
   });
 
+  describe('getScalingProgress', function () {
+    var describeTableSpy;
+
+    beforeEach(function () {
+      describeTableSpy = sinon.spy();
+      AWS.mock('DynamoDB', 'describeTable', describeTableSpy);
+    });
+
+    it('should call DynamoDB describe table', function () {
+      dynamoDB.getScalingProgress(callback);
+
+      assert.isTrue(describeTableSpy.called, 'should make call to describeTable.');
+      var expectedParams = {
+        TableName: 'testTableName'
+      };
+      assert.isTrue(describeTableSpy.calledWith(expectedParams, sinon.match.func), 'should send correct params.');
+      assert.isFalse(callback.called, 'should not call callback until response from AWS');
+    });
+
+    it('should return pending status if table is updating', function () {
+      dynamoDB.getScalingProgress(callback);
+
+      // Simulate response from AWS
+      describeTableSpy.callArgWith(1, null, {Table: {TableStatus: 'UPDATING'}});
+
+      assert.isTrue(callback.calledOnce, 'should invoke callback after response from AWS');
+      var expectedResult = {
+        type: 'DynamoDB',
+        name: 'testTableName',
+        status: 'pending',
+        message: 'TableStatus: UPDATING'
+      };
+      assert.isTrue(callback.calledWith(expectedResult), 'should send correct result back');
+    });
+
+    it('should return success status if table is active', function () {
+      dynamoDB.getScalingProgress(callback);
+
+      // Simulate response from AWS
+      describeTableSpy.callArgWith(1, null, {Table: {TableStatus: 'ACTIVE'}});
+
+      assert.isTrue(callback.calledOnce, 'should invoke callback after response from AWS');
+      var expectedResult = {
+        type: 'DynamoDB',
+        name: 'testTableName',
+        status: 'success'
+      };
+      assert.isTrue(callback.calledWith(expectedResult), 'should send correct result back');
+    });
+
+    it('should return failure if error returned from AWS', function () {
+      dynamoDB.getScalingProgress(callback);
+
+      // Simulate response from AWS
+      describeTableSpy.callArgWith(1, {awsError: 'AWS Error'});
+
+      assert.isTrue(callback.calledOnce, 'should invoke callback after response from AWS');
+      var expectedResult = {
+        type: 'DynamoDB',
+        name: 'testTableName',
+        status: 'failure',
+        error: {awsError: 'AWS Error'}
+      };
+      assert.isTrue(callback.calledWith(expectedResult), 'should send correct result back');
+    });
+
+    it('should return failure if table is creating', function () {
+      dynamoDB.getScalingProgress(callback);
+
+      // Simulate response from AWS
+      describeTableSpy.callArgWith(1, null, {Table: {TableStatus: 'CREATING'}});
+
+      assert.isTrue(callback.calledOnce, 'should invoke callback after response from AWS');
+      var expectedResult = {
+        type: 'DynamoDB',
+        name: 'testTableName',
+        status: 'failure',
+        error: 'Unexpected TableStatus: CREATING'
+      };
+      assert.isTrue(callback.calledWith(expectedResult), 'should send correct result back');
+    });
+
+    it('should return failure if table is deleting', function () {
+      dynamoDB.getScalingProgress(callback);
+
+      // Simulate response from AWS
+      describeTableSpy.callArgWith(1, null, {Table: {TableStatus: 'DELETING'}});
+
+      assert.isTrue(callback.calledOnce, 'should invoke callback after response from AWS');
+      var expectedResult = {
+        type: 'DynamoDB',
+        name: 'testTableName',
+        status: 'failure',
+        error: 'Unexpected TableStatus: DELETING'
+      };
+      assert.isTrue(callback.calledWith(expectedResult), 'should send correct result back');
+    });
+
+  });
+
   describe('scale', function () {
 
-    var dynamoDB;
-    var callback;
     var updateTableSpy;
 
     beforeEach(function () {
-      dynamoDB = new DynamoDB(params);
-      callback = sinon.spy();
       updateTableSpy = sinon.spy();
       AWS.mock('DynamoDB', 'updateTable', updateTableSpy);
-    });
-
-    afterEach(function () {
-      AWS.restore();
     });
 
     it('should call DynamoDB update table with parameter object', function () {
