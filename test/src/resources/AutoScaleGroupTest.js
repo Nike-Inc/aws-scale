@@ -7,11 +7,20 @@ var AutoScaleGroup = require('../../../src/resources/AutoScaleGroup');
 describe('AutoScaleGroup', function () {
 
   var params;
+  var callback;
+  var asg;
+
   beforeEach(function () {
     params = {
       AutoScalingGroupName: 'testASG',
-      DesiredCapacity: 1
+      DesiredCapacity: 2
     };
+    callback = sinon.spy();
+    asg = new AutoScaleGroup(params);
+  });
+
+  afterEach(function () {
+    AWS.restore();
   });
 
   describe('module', function () {
@@ -50,25 +59,157 @@ describe('AutoScaleGroup', function () {
 
   });
 
+  describe('getScalingProgress', function () {
+
+    var describeASGSpy;
+
+    beforeEach(function () {
+      describeASGSpy = sinon.spy();
+      AWS.mock('AutoScaling', 'describeAutoScalingGroups', describeASGSpy);
+    });
+
+    it('should look up ASG details via SDK', function () {
+      asg.getScalingProgress(callback);
+
+      assert.isTrue(describeASGSpy.calledOnce, 'should get ASG description from AWS');
+      var expectedParams = {
+        AutoScalingGroupNames: ['testASG']
+      };
+      assert.isTrue(describeASGSpy.calledWith(expectedParams, sinon.match.func), 'should pass proper params to describe call');
+      assert.isFalse(callback.called, 'should not invoke callback until AWS responds');
+    });
+
+    it('should respond with success if InService instances equals desired capacity', function () {
+      asg.getScalingProgress(callback);
+
+      // Simulate desired instance InService count reached
+      var awsResponse = {
+        AutoScalingGroups: [
+          {
+            AutoScalingGroupName: 'testASG',
+            Instances: [
+              {
+                InstanceId: 'instance1',
+                LifecycleState: 'InService'
+              },
+              {
+                InstanceId: 'instance2',
+                LifecycleState: 'InService'
+              }
+            ]
+          }
+        ]
+      };
+      describeASGSpy.callArgWith(1, null, awsResponse);
+
+      assert.isTrue(callback.calledOnce, 'should invoke callback after AWS response');
+      var expectedResult = {
+        type: 'AutoScaleGroup',
+        name: 'testASG',
+        status: 'success'
+      };
+      assert.isTrue(callback.calledWith(expectedResult), 'should return correct result');
+    });
+
+    it('should respond with pending if InService instances are below desired capacity', function () {
+      asg.getScalingProgress(callback);
+
+      var awsResponse = {
+        AutoScalingGroups: [
+          {
+            AutoScalingGroupName: 'testASG',
+            Instances: [
+              {
+                InstanceId: 'instance1',
+                LifecycleState: 'InService'
+              },
+              {
+                InstanceId: 'instance2',
+                LifecycleState: 'Pending'
+              }
+            ]
+          }
+        ]
+      };
+      describeASGSpy.callArgWith(1, null, awsResponse);
+
+      assert.isTrue(callback.calledOnce, 'should invoke callback after AWS response');
+      var expectedResult = {
+        type: 'AutoScaleGroup',
+        name: 'testASG',
+        status: 'pending',
+        message: 'InService: 1 Pending: 1'
+      };
+      assert.isTrue(callback.calledWith(expectedResult), 'should return correct result');
+    });
+
+    it('should respond with pending if InService instances are above desired capacity', function () {
+      asg.getScalingProgress(callback);
+
+      var awsResponse = {
+        AutoScalingGroups: [
+          {
+            AutoScalingGroupName: 'testASG',
+            Instances: [
+              {
+                InstanceId: 'instance1',
+                LifecycleState: 'InService'
+              },
+              {
+                InstanceId: 'instance2',
+                LifecycleState: 'InService'
+              },
+              {
+                InstanceId: 'instance3',
+                LifecycleState: 'InService'
+              },
+              {
+                InstanceId: 'instance4',
+                LifecycleState: 'Terminated'
+              }
+            ]
+          }
+        ]
+      };
+      describeASGSpy.callArgWith(1, null, awsResponse);
+
+      assert.isTrue(callback.calledOnce, 'should invoke callback after AWS response');
+      var expectedResult = {
+        type: 'AutoScaleGroup',
+        name: 'testASG',
+        status: 'pending',
+        message: 'InService: 3 Terminated: 1'
+      };
+      assert.isTrue(callback.calledWith(expectedResult), 'should return correct result');
+    });
+
+    it('should respond with failure if AWS returns an error', function () {
+      asg.getScalingProgress(callback);
+
+      describeASGSpy.callArgWith(1, {awsError: 'Error from AWS'});
+
+      assert.isTrue(callback.calledOnce, 'should invoke callback after AWS response');
+      var expectedResult = {
+        type: 'AutoScaleGroup',
+        name: 'testASG',
+        status: 'failure',
+        error: {awsError: 'Error from AWS'}
+      };
+      assert.isTrue(callback.calledWith(expectedResult), 'should return correct result');
+    });
+
+  });
 
   describe('scale', function () {
 
-    var asg;
-    var callback;
     var desiredCapacitySpy;
     var updateASGSpy;
 
     beforeEach(function () {
-      asg = new AutoScaleGroup(params);
-      callback = sinon.spy();
       desiredCapacitySpy = sinon.spy();
       updateASGSpy = sinon.spy();
       AWS.mock('AutoScaling', 'setDesiredCapacity', desiredCapacitySpy);
       AWS.mock('AutoScaling', 'updateAutoScalingGroup', updateASGSpy);
-    });
-
-    afterEach(function () {
-      AWS.restore();
     });
 
     it('should call AutoScaleGroup desired capacity with parameter object', function () {
@@ -121,7 +262,7 @@ describe('AutoScaleGroup', function () {
         assert.isTrue(updateASGSpy.calledOnce, 'should update the auto scale group.');
         var expectedUpdateParams = {
           AutoScalingGroupName: 'testASG',
-          MinSize: 1 // Matches desiredCapacity
+          MinSize: 2 // Matches desiredCapacity
         };
         assert.isTrue(updateASGSpy.calledWith(expectedUpdateParams, sinon.match.func), 'should update ASG with correct parameters');
       });
@@ -135,7 +276,7 @@ describe('AutoScaleGroup', function () {
         assert.isTrue(desiredCapacitySpy.calledOnce, 'should set desired capacity after update.');
         var expectedParams = {
           AutoScalingGroupName: 'testASG',
-          DesiredCapacity: 1 // Matches desiredCapacity
+          DesiredCapacity: 2 // Matches desiredCapacity
         };
         assert.isTrue(desiredCapacitySpy.calledWith(expectedParams, sinon.match.func), 'should update capacity with correct params.');
       });
