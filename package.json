@@ -4,10 +4,12 @@
   "version": "1.1.1",
   "keywords": [
     "aws",
+    "scale",
     "scaling",
     "autoscaling",
     "DynamoDB",
-    "Auto Scaling Group"
+    "Auto Scaling Group",
+    "Lambda"
   ],
   "license": "MIT",
   "bugs": {

@@ -7,10 +7,12 @@ var AutoScaleGroup = require('./resources/AutoScaleGroup');
  * Manages and scales a set of AWS resources together. The ResourceSet scales all the resources and reports the final
  * status of each scale operation once all have completed.
  *
+ * @param {object} [params] - optional. Used to enable additional features.
  * @constructor
  */
-var ResourceSet = function () {
+var ResourceSet = function (params) {
   this.resources = [];
+  this.params = params || {};
 };
 
 /**
@@ -36,6 +38,58 @@ ResourceSet.prototype.getResources = function () {
 };
 
 /**
+ * Polls the resources in the set.
+ * @param callback
+ */
+// TODO: Add configurable timeout.
+ResourceSet.prototype.pollScaleProgress = function (callback) {
+  var self = this;
+  var scaleResults = [];
+  var success = true;
+  // var iteration = 1;
+  // console.log('---Resource Polling Start---');
+  // console.log('Resource Count: ' + self.resources.length);
+
+  function poll() {
+    // console.log('-Iteration ' + (iteration++) + '-');
+    var responseCount = 0;
+    var noResourcesPending = true;
+    for (var i = 0; i < self.resources.length; i++) {
+      const index = i;
+      var resource = self.resources[i];
+      var scaleResult = scaleResults[i];
+      if (scaleResult && scaleResult.status !== 'pending') {
+        responseCount++;
+        continue;
+      }
+
+      resource.getScalingProgress(function (result) {
+        responseCount++;
+        success = (success && result.status !== 'failure');
+        noResourcesPending = noResourcesPending && (result.status !== 'pending');
+    //     if (result.status !== 'pending') {
+    //       console.log(result.type + ' Resource ' + result.name + ' terminated with status: ' + result.status);
+    //     }
+        scaleResults[index] = result;
+        if (responseCount >= self.resources.length) {
+    //       // All responses returned
+          if (noResourcesPending) {
+            success ? callback(null, scaleResults) : callback(scaleResults);
+    //         console.log('---Resource Polling Complete---');
+    //         console.log('Results:');
+    //         console.log(JSON.stringify(scaleResults, null, 2));
+          } else {
+            setTimeout(poll, 5000);
+          }
+        }
+      });
+    }
+  }
+
+  poll();
+};
+
+/**
  * Scales all resources managed by the set. After all resources are complete, the callback function is invoked. An
  * array of status objects are returned in the callback, one for each scaled resource. If all resources are successfully
  * scaled the array is returned as data, if one or more failed it will be returned as an error.
@@ -58,7 +112,14 @@ ResourceSet.prototype.scale = function (callback) {
 
       // All results finished, invoke callback
       if (results.length >= self.resources.length) {
-        success ? callback(null, results) : callback(results);
+        if (self.params.pollScaleProgress && success) {
+          // Monitor scaling progress if requested
+          self.pollScaleProgress(callback);
+        } else if (success) {
+          callback(null, results);
+        } else {
+          callback(results);
+        }
       }
     });
   }
