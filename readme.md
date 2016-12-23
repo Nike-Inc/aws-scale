@@ -1,5 +1,7 @@
 # Aws-Scale
+
 [![Build Status](https://travis-ci.org/aaronbruckner/aws-scale.svg?branch=master)](https://travis-ci.org/aaronbruckner/aws-scale) [![Coverage Status](https://coveralls.io/repos/github/aaronbruckner/aws-scale/badge.svg?branch=master)](https://coveralls.io/github/aaronbruckner/aws-scale?branch=master) [![Known Vulnerabilities](https://snyk.io/test/github/aaronbruckner/aws-scale/badge.svg)](https://snyk.io/test/github/aaronbruckner/aws-scale)
+
 ## A simple module for scaling AWS resources together.
 
 ### Problem
