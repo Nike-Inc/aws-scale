@@ -31,7 +31,8 @@
     "coveralls": "npm run coverage -- --report lcovonly && cat ./coverage/lcov.info | coveralls"
   },
   "dependencies": {
-    "aws-sdk": "^2.7.13"
+    "aws-sdk": "^2.7.13",
+    "cli-color": "^1.1.0"
   },
   "devDependencies": {
     "aws-sdk-mock": "^1.6.1",

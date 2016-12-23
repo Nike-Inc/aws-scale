@@ -2,6 +2,7 @@
 
 var DynamoDB = require('./resources/DynamoDB');
 var AutoScaleGroup = require('./resources/AutoScaleGroup');
+var clc = require('cli-color');
 
 /**
  * Manages and scales a set of AWS resources together. The ResourceSet scales all the resources and reports the final
@@ -46,12 +47,12 @@ ResourceSet.prototype.pollScaleProgress = function (callback) {
   var self = this;
   var scaleResults = [];
   var success = true;
-  // var iteration = 1;
-  // console.log('---Resource Polling Start---');
-  // console.log('Resource Count: ' + self.resources.length);
+  var iteration = 1;
+  console.log(clc.black.bgWhite.bold('---  Resource Polling Start  ---'));
+  console.log('Resource Count: ' + self.resources.length);
 
   function poll() {
-    // console.log('-Iteration ' + (iteration++) + '-');
+    console.log(clc.bold('\n-Iteration ' + (iteration++) + '-\n'));
     var responseCount = 0;
     var noResourcesPending = true;
     for (var i = 0; i < self.resources.length; i++) {
@@ -67,17 +68,28 @@ ResourceSet.prototype.pollScaleProgress = function (callback) {
         responseCount++;
         success = (success && result.status !== 'failure');
         noResourcesPending = noResourcesPending && (result.status !== 'pending');
-    //     if (result.status !== 'pending') {
-    //       console.log(result.type + ' Resource ' + result.name + ' terminated with status: ' + result.status);
-    //     }
+
+        var resourceId = ' - ' + result.type + ' ' + result.name;
+        switch (result.status) {
+          case 'pending':
+            console.log(clc.yellow.bold('PENDING') + resourceId + ' - ' + result.message);
+            break;
+          case 'success':
+            console.log(clc.green.bold('SUCCESS') + resourceId);
+            break;
+          case 'failure':
+            console.log(clc.red.bold('FAILURE') + resourceId + ' - ' + JSON.stringify(result.error));
+            break;
+        }
+
         scaleResults[index] = result;
         if (responseCount >= self.resources.length) {
-    //       // All responses returned
+          // All responses returned
           if (noResourcesPending) {
+            console.log(clc.black.bgWhite.bold('---  Resource Polling Complete  ---'));
+            console.log('\nFinal Results:');
+            console.log(JSON.stringify(scaleResults, null, 2));
             success ? callback(null, scaleResults) : callback(scaleResults);
-    //         console.log('---Resource Polling Complete---');
-    //         console.log('Results:');
-    //         console.log(JSON.stringify(scaleResults, null, 2));
           } else {
             setTimeout(poll, 5000);
           }
@@ -118,6 +130,11 @@ ResourceSet.prototype.scale = function (callback) {
         } else if (success) {
           callback(null, results);
         } else {
+          if (self.params.pollScaleProgress) {
+            console.log(clc.red.bold('FAILURE') + ' - Polling skipped due to scale error.');
+            console.log('\nFinal Results:');
+            console.log(JSON.stringify(results, null, 2));
+          }
           callback(results);
         }
       }
