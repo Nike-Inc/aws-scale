@@ -161,6 +161,21 @@ err = [
 
 ```
 
+**Watch Scaling Status in Node**
+
+<img src="https://raw.githubusercontent.com/aaronbruckner/aws-scale/master/examplePollingOutput.png" width="400" height="600">
+
+If you're scaling resources via node locally, aws-scale can poll your newly scaled resources and tell you when they're ready for
+use. If you're a developer waiting for a stack to come online this is much easier than digging through the console. To
+use polled, pass the following to your ResourceSet constructor: 
+
+```js
+var resourceSet = new ResourceSet({pollScaleProgress: true});
+```
+
+When using polling, the callback provided to ```resourceSet.scale(callback)``` will not be invoked until after
+all resources have finished scaling to desired levels.
+
 **Resource Parameter Objects**
 
 The parameter objects passed to the resources are directly passed to an AWS Javascript SDK call. The contract for
@@ -217,6 +232,9 @@ github page to make any feature requests! Below are some of my next targets:
 you when all resources are finished scaling (and therefore ready for you to work on).
 
 ### Change Log
+
+#### 1.2.0 - Dec 22, 2016
+* Added scale status polling. Now you can scale resources and monitor their scale progress.
 
 #### 1.1.0 - Dec 18, 2016
 * Added setMinSize to AutoScaleGroup parameter object. If set to true, scale operation will first set minimum size of
