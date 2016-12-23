@@ -1,5 +1,5 @@
 # Aws-Scale
-[![Build Status](https://travis-ci.org/aaronbruckner/aws-scale.svg?branch=master)](https://travis-ci.org/aaronbruckner/aws-scale) [![Coverage Status](https://coveralls.io/repos/github/aaronbruckner/aws-scale/badge.svg?branch=master)](https://coveralls.io/github/aaronbruckner/aws-scale?branch=master)
+[![Build Status](https://travis-ci.org/aaronbruckner/aws-scale.svg?branch=master)](https://travis-ci.org/aaronbruckner/aws-scale) [![Coverage Status](https://coveralls.io/repos/github/aaronbruckner/aws-scale/badge.svg?branch=master)](https://coveralls.io/github/aaronbruckner/aws-scale?branch=master) [![Known Vulnerabilities](https://snyk.io/test/github/aaronbruckner/aws-scale/badge.svg)](https://snyk.io/test/github/aaronbruckner/aws-scale)
 ## A simple module for scaling AWS resources together.
 
 ### Problem
@@ -9,8 +9,9 @@ can be easily forgotten about and left at development or performance testing lev
 
 ### Solution
 
-AWS-Scale is a simple library used to automate the scaling process. You can use it to build single lambda functions
-that automatically scale down resources at the end of the day or create node scripts that scale up application stacks.
+AWS-Scale is a simple library used to automate the scaling process. You can use it to build single lambda functions per
+app stack that automatically scale down resources every day. Then use aws-scale in a node script to scale the entire
+stack back up and notify you when complete.
 
 ### Usage
 
@@ -100,21 +101,16 @@ var asgParams = {
   DesiredCapacity: 3
 };
 
-var resourceSet = new scale.ResourceSet();
+// Pass optional parameter object to poll scaling progress and notify you via console logs.
+var resourceSet = new scale.ResourceSet({pollScaleProgress: true});
 resourceSet.add(new scale.DynamoDB(dynamoParams));
 resourceSet.add(new scale.AutoScaleGroup(asgParams));
 
-resourceSet.scale(function(err, data) {
-  if (err) {
-    console.log(err);
-  } else {
-    console.log(data);
-  }
-});
+// ResourceSet will start scaling operations via AWS SDK. It will then poll the resources every 5 seconds to check scaling status.
+resourceSet.scale();
 ```
 
-The script can be run via ```node webServiceScaleUp.js```. More features are coming that will allow you to monitor
-the status of the scale up operations and notify you once all have finished.
+The script can be run via ```node webServiceScaleUp.js```. 
 
 **Callback Return**
 
@@ -170,7 +166,7 @@ use. If you're a developer waiting for a stack to come online this is much easie
 use polled, pass the following to your ResourceSet constructor: 
 
 ```js
-var resourceSet = new ResourceSet({pollScaleProgress: true});
+var resourceSet = new scale.ResourceSet({pollScaleProgress: true});
 ```
 
 When using polling, the callback provided to ```resourceSet.scale(callback)``` will not be invoked until after
@@ -228,8 +224,6 @@ This module is under active development and I'd like to add any helpful features
 github page to make any feature requests! Below are some of my next targets:
 
 * Add Kinesis stream scaling.
-* Add scale progress mode. This allows you to scale a set of resources while aws-scale polls each resource and notifies
-you when all resources are finished scaling (and therefore ready for you to work on).
 
 ### Change Log
 
