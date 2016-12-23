@@ -1,7 +1,7 @@
 {
   "name": "aws-scale",
   "description": "A simple module for scaling AWS resources together.",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "keywords": [
     "aws",
     "scale",
