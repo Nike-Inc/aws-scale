@@ -198,6 +198,47 @@ describe('AutoScaleGroup', function () {
       assert.isTrue(callback.calledWith(expectedResult), 'should return correct result');
     });
 
+    it('should response with success when zero instances are requested and no instances are in service', function () {
+      params = {
+        AutoScalingGroupName: 'testASG',
+        DesiredCapacity: 0
+      };
+      asg = new AutoScaleGroup(params);
+
+      asg.getScalingProgress(callback);
+
+      var awsResponse = {
+        AutoScalingGroups: [
+          {
+            AutoScalingGroupName: 'testASG',
+            Instances: [
+              {
+                InstanceId: 'instance1',
+                LifecycleState: 'Terminated'
+              },
+              {
+                InstanceId: 'instance2',
+                LifecycleState: 'Terminated'
+              },
+              {
+                InstanceId: 'instance3',
+                LifecycleState: 'Terminating'
+              }
+            ]
+          }
+        ]
+      };
+      describeASGSpy.callArgWith(1, null, awsResponse);
+
+      assert.isTrue(callback.calledOnce, 'should invoke callback after AWS response');
+      var expectedResult = {
+        type: 'AutoScaleGroup',
+        name: 'testASG',
+        status: 'success'
+      };
+      assert.isTrue(callback.calledWith(expectedResult), 'should return correct result when no InService instances remain');
+    });
+
   });
 
   describe('scale', function () {

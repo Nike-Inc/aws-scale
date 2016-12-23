@@ -60,7 +60,9 @@ AutoScaleGroup.prototype.getScalingProgress = function(callback) {
     }
 
     var instances = data.AutoScalingGroups[0].Instances;
-    var stateTotals = {};
+    var stateTotals = {
+      InService: 0
+    };
     var i;
     var state;
     for (i = 0; i < instances.length; i++) {
