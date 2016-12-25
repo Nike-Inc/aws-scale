@@ -52,7 +52,7 @@ ResourceSet.prototype.pollScaleProgress = function (callback) {
   console.log('Resource Count: ' + self.resources.length);
 
   function poll() {
-    console.log(clc.bold('\n-Iteration ' + (iteration++) + '-\n'));
+    console.log(clc.bold('\n-Iteration ' + (iteration++) + ' (' + new Date().toISOString() + ')\n'));
     var responseCount = 0;
     var noResourcesPending = true;
     for (var i = 0; i < self.resources.length; i++) {
