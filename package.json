@@ -1,15 +1,14 @@
 {
   "name": "aws-scale",
   "description": "A simple module for scaling AWS resources together.",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "keywords": [
+    "aws scaling",
+    "aws scale",
     "aws",
     "scale",
     "scaling",
-    "autoscaling",
-    "DynamoDB",
-    "Auto Scaling Group",
-    "Lambda"
+    "autoscaling"
   ],
   "license": "MIT",
   "bugs": {
