@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/aaronbruckner/aws-scale.svg?branch=master)](https://travis-ci.org/aaronbruckner/aws-scale) [![Coverage Status](https://coveralls.io/repos/github/aaronbruckner/aws-scale/badge.svg?branch=master)](https://coveralls.io/github/aaronbruckner/aws-scale?branch=master) [![Known Vulnerabilities](https://snyk.io/test/github/aaronbruckner/aws-scale/badge.svg)](https://snyk.io/test/github/aaronbruckner/aws-scale)
 
-## AWS Scaling made simple.
+## AWS Scaling Made Simple.
 
 ### Problem
 Developing applications on AWS can get expensive. Leaving EC2s, DynamoDB tables, and Kinesis streams running in test accounts
