@@ -14,6 +14,7 @@ describe('DynamoDB', function () {
     callback = sinon.spy();
     params = {
       TableName: 'testTableName',
+      ignoreUnchangedCapacityUpdates: false,
       ProvisionedThroughput: {
         ReadCapacityUnits: 1,
         WriteCapacityUnits: 1
@@ -221,6 +222,428 @@ describe('DynamoDB', function () {
         error: {errorResponse: 'awsError'}
       };
       assert.isTrue(callback.calledWith(expectedResult), 'should return failure result object.');
+    });
+
+    describe('ignoreUnchangedCapacityUpdates', function () {
+
+      var describeTableSpy;
+
+      beforeEach(function () {
+        params.ignoreUnchangedCapacityUpdates = true;
+        dynamoDB = new DynamoDB(params);
+        describeTableSpy = sinon.spy();
+        AWS.mock('DynamoDB', 'describeTable', describeTableSpy);
+      });
+
+      it('should attempt to describeTable before scaling if ignoreUnchangedCapacityUpdates true', function () {
+        dynamoDB.scale(callback);
+
+        assert.isFalse(updateTableSpy.called, 'should not update table until capacity values are checked');
+        assert.isTrue(describeTableSpy.calledOnce, 'should attempt to describe the table');
+        var expectedParams = {
+          TableName: 'testTableName'
+        };
+        assert.isTrue(describeTableSpy.calledWith(expectedParams, sinon.match.func), 'should call describeTable with correct params');
+      });
+
+      it('should default to true', function () {
+        params = {
+          TableName: 'testTableName',
+          ProvisionedThroughput: {
+            ReadCapacityUnits: 1,
+            WriteCapacityUnits: 1
+          }
+        };
+        dynamoDB = new DynamoDB(params);
+
+        dynamoDB.scale(callback);
+
+        assert.isFalse(updateTableSpy.called, 'should not update table until capacity values are checked');
+        assert.isTrue(describeTableSpy.calledOnce, 'should attempt to describe the table');
+      });
+
+      it('should not modify table capacity if different from current values', function () {
+        dynamoDB.scale(callback);
+
+        // Desired capacity differs from current table settings.
+        var describeTableResponse = {
+          Table: {
+            ProvisionedThroughput: {
+              ReadCapacityUnits: 100,
+              WriteCapacityUnits: 1
+            }
+          }
+        };
+        describeTableSpy.callArgWith(1, null, describeTableResponse);
+
+        assert.isTrue(updateTableSpy.calledOnce, 'should update table after checking current table capacity');
+        // Should not modify parameter object passed to update call.
+        var expectedParams = {
+          TableName: 'testTableName',
+          ProvisionedThroughput: {
+            ReadCapacityUnits: 1,
+            WriteCapacityUnits: 1
+          }
+        };
+        assert.isTrue(updateTableSpy.calledOnce, 'should attempt to update the table after capacity check.');
+        assert.isTrue(updateTableSpy.calledWith(expectedParams), 'should call table update with proper capacity');
+      });
+
+      it('should only invoke callback after table describe AND update', function () {
+        dynamoDB.scale(callback);
+
+        // Desired capacity differs from current table settings.
+        var describeTableResponse = {
+          Table: {
+            ProvisionedThroughput: {
+              ReadCapacityUnits: 100,
+              WriteCapacityUnits: 1
+            }
+          }
+        };
+        describeTableSpy.callArgWith(1, null, describeTableResponse);
+
+        assert.isFalse(callback.called, 'should not invoke callback until table update complete');
+
+        updateTableSpy.callArgWith(1, null, {response: 'success'});
+
+        assert.isTrue(callback.calledOnce, 'should invoke callback after table update');
+      });
+
+      it('should not attempt scale operation if table capacity matches current values and no global indexes were provided', function () {
+        dynamoDB.scale(callback);
+
+        // Desired capacity matches current table capacity, should skip update.
+        var describeTableResponse = {
+          Table: {
+            ProvisionedThroughput: {
+              ReadCapacityUnits: 1,
+              WriteCapacityUnits: 1
+            }
+          }
+        };
+        describeTableSpy.callArgWith(1, null, describeTableResponse);
+
+        assert.isFalse(updateTableSpy.called, 'should ignore table update if no capacity change');
+        assert.isTrue(callback.calledOnce, 'should invoke callback');
+        var expectedResult = {
+          type: 'DynamoDB',
+          name: 'testTableName',
+          status: 'success'
+        };
+        assert.isTrue(callback.calledWith(expectedResult), 'should return success result in callback');
+      });
+
+      it('should remove table capacity update if update matches current values and global indexes were provided', function () {
+        params.GlobalSecondaryIndexUpdates = [
+          {
+            Update: {
+              IndexName: 'globalIndex1',
+              ProvisionedThroughput: {
+                ReadCapacityUnits: 2,
+                WriteCapacityUnits: 2
+              }
+            }
+          }
+        ];
+        dynamoDB.scale(callback);
+
+        // Desired capacity matches current table capacity, should remove table update but still do global index update.
+        var describeTableResponse = {
+          Table: {
+            ProvisionedThroughput: {
+              ReadCapacityUnits: 1,
+              WriteCapacityUnits: 1
+            },
+            GlobalSecondaryIndexes: [
+              {
+                IndexName: 'globalIndex1',
+                ProvisionedThroughput: {
+                  ReadCapacityUnits: 1,
+                  WriteCapacityUnits: 1
+                }
+              }
+            ]
+          }
+        };
+        describeTableSpy.callArgWith(1, null, describeTableResponse);
+
+        assert.isTrue(updateTableSpy.calledOnce, 'should update the table');
+        var expectedParams = {
+          TableName: 'testTableName',
+          GlobalSecondaryIndexUpdates: [
+            {
+              Update: {
+                IndexName: 'globalIndex1',
+                ProvisionedThroughput: {
+                  ReadCapacityUnits: 2,
+                  WriteCapacityUnits: 2
+                }
+              }
+            }
+          ]
+        };
+        assert.isTrue(updateTableSpy.calledWith(expectedParams, sinon.match.func), 'should call update with global index throughput but not matching table throughput');
+      });
+
+      it('should remove any global indexes that match current values', function () {
+        params.GlobalSecondaryIndexUpdates = [
+          {
+            Update: {
+              IndexName: 'globalIndexChanged',
+              ProvisionedThroughput: {
+                ReadCapacityUnits: 2,
+                WriteCapacityUnits: 2
+              }
+            }
+          },
+          {
+            Update: {
+              IndexName: 'globalIndexUnchanged',
+              ProvisionedThroughput: {
+                ReadCapacityUnits: 1,
+                WriteCapacityUnits: 1
+              }
+            }
+          }
+        ];
+        dynamoDB.scale(callback);
+
+        // Desired capacity matches current table capacity, should remove table update but still do global index update.
+        var describeTableResponse = {
+          Table: {
+            ProvisionedThroughput: {
+              ReadCapacityUnits: 1,
+              WriteCapacityUnits: 1
+            },
+            GlobalSecondaryIndexes: [
+              {
+                IndexName: 'globalIndexChanged',
+                ProvisionedThroughput: {
+                  ReadCapacityUnits: 1,
+                  WriteCapacityUnits: 1
+                }
+              },
+              {
+                IndexName: 'globalIndexUnchanged',
+                ProvisionedThroughput: {
+                  ReadCapacityUnits: 1,
+                  WriteCapacityUnits: 1
+                }
+              }
+            ]
+          }
+        };
+        describeTableSpy.callArgWith(1, null, describeTableResponse);
+
+        assert.isTrue(updateTableSpy.calledOnce, 'should update the table');
+        var expectedParams = {
+          TableName: 'testTableName',
+          GlobalSecondaryIndexUpdates: [
+            {
+              Update: {
+                IndexName: 'globalIndexChanged',
+                ProvisionedThroughput: {
+                  ReadCapacityUnits: 2,
+                  WriteCapacityUnits: 2
+                }
+              }
+            }
+          ]
+        };
+        assert.isTrue(updateTableSpy.calledWith(expectedParams, sinon.match.func), 'should call update with only new global index updates');
+      });
+
+      it('should not attempt scale operation if all global indexes match current values and no table update is provided', function () {
+        delete params.ProvisionedThroughput;
+        params.GlobalSecondaryIndexUpdates = [
+          {
+            Update: {
+              IndexName: 'globalIndexUnchanged',
+              ProvisionedThroughput: {
+                ReadCapacityUnits: 1,
+                WriteCapacityUnits: 1
+              }
+            }
+          }
+        ];
+
+        dynamoDB.scale(callback);
+
+        var describeTableResponse = {
+          Table: {
+            ProvisionedThroughput: {
+              ReadCapacityUnits: 1,
+              WriteCapacityUnits: 1
+            },
+            GlobalSecondaryIndexes: [
+              {
+                IndexName: 'globalIndexUnchanged',
+                ProvisionedThroughput: {
+                  ReadCapacityUnits: 1,
+                  WriteCapacityUnits: 1
+                }
+              }
+            ]
+          }
+        };
+        describeTableSpy.callArgWith(1, null, describeTableResponse);
+
+        assert.isFalse(updateTableSpy.called, 'should not update table if no indexes have new values');
+      });
+
+      it('should leave non-update global index operations untouched', function () {
+        delete params.ProvisionedThroughput;
+        params.GlobalSecondaryIndexUpdates = [
+          {
+            Delete: {
+              IndexName: 'globalIndexNonUpdate'
+            }
+          }
+        ];
+
+        dynamoDB.scale(callback);
+
+        var describeTableResponse = {
+          Table: {
+            ProvisionedThroughput: {
+              ReadCapacityUnits: 1,
+              WriteCapacityUnits: 1
+            },
+            GlobalSecondaryIndexes: [
+              {
+                IndexName: 'globalIndexNonUpdate',
+                ProvisionedThroughput: {
+                  ReadCapacityUnits: 1,
+                  WriteCapacityUnits: 1
+                }
+              }
+            ]
+          }
+        };
+        describeTableSpy.callArgWith(1, null, describeTableResponse);
+
+        assert.isTrue(updateTableSpy.calledOnce, 'should update the table');
+        var expectedParams = {
+          TableName: 'testTableName',
+          GlobalSecondaryIndexUpdates: [
+            {
+              Delete: {
+                IndexName: 'globalIndexNonUpdate'
+              }
+            }
+          ]
+        };
+        assert.isTrue(updateTableSpy.calledWith(expectedParams, sinon.match.func), 'should ignore and pass on non-update operations to global indexes');
+      });
+
+      it('should not attempt scale operation if table capacity and all global indexes match current values', function () {
+        params.GlobalSecondaryIndexUpdates = [
+          {
+            Update: {
+              IndexName: 'globalIndexUnchanged',
+              ProvisionedThroughput: {
+                ReadCapacityUnits: 1,
+                WriteCapacityUnits: 1
+              }
+            }
+          }
+        ];
+
+        dynamoDB.scale(callback);
+
+        // All updates match current table values, do not scale.
+        var describeTableResponse = {
+          Table: {
+            ProvisionedThroughput: {
+              ReadCapacityUnits: 1,
+              WriteCapacityUnits: 1
+            },
+            GlobalSecondaryIndexes: [
+              {
+                IndexName: 'globalIndexUnchanged',
+                ProvisionedThroughput: {
+                  ReadCapacityUnits: 1,
+                  WriteCapacityUnits: 1
+                }
+              }
+            ]
+          }
+        };
+        describeTableSpy.callArgWith(1, null, describeTableResponse);
+
+        assert.isFalse(updateTableSpy.called, 'should not update table if no updates actually exist');
+        assert.isTrue(callback.calledOnce, 'should invoke callback');
+        var expectedResult = {
+          type: 'DynamoDB',
+          name: 'testTableName',
+          status: 'success'
+        };
+        assert.isTrue(callback.calledWith(expectedResult), 'should return success result in callback');
+      });
+
+      it('should not modify any global indexes provided but not found in the table describe', function () {
+        params.GlobalSecondaryIndexUpdates = [
+          {
+            Update: {
+              IndexName: 'globalIndexThatDoesNotExist',
+              ProvisionedThroughput: {
+                ReadCapacityUnits: 1,
+                WriteCapacityUnits: 1
+              }
+            }
+          }
+        ];
+
+        dynamoDB.scale(callback);
+
+        // Update contains global index that doesn't exist on the current table. Ignore.
+        var describeTableResponse = {
+          Table: {
+            ProvisionedThroughput: {
+              ReadCapacityUnits: 1,
+              WriteCapacityUnits: 1
+            },
+            GlobalSecondaryIndexes: []
+          }
+        };
+
+        describeTableSpy.callArgWith(1, null, describeTableResponse);
+
+        assert.isTrue(updateTableSpy.calledOnce, 'should update the table');
+        var expectedParams = {
+          TableName: 'testTableName',
+          GlobalSecondaryIndexUpdates: [
+            {
+              Update: {
+                IndexName: 'globalIndexThatDoesNotExist',
+                ProvisionedThroughput: {
+                  ReadCapacityUnits: 1,
+                  WriteCapacityUnits: 1
+                }
+              }
+            }
+          ]
+        };
+        assert.isTrue(updateTableSpy.calledWith(expectedParams, sinon.match.func), 'should ignore and pass on missing global indexes');
+      });
+
+      it('should ignore any errors and attempt to scale resource with no modifications to capacities', function () {
+        dynamoDB.scale(callback);
+
+        describeTableSpy.callArgWith(1, {error: 'DescribeTableError'});
+
+        assert.isTrue(updateTableSpy.calledOnce, 'should update the table');
+        var expectedParams = {
+          TableName: 'testTableName',
+          ProvisionedThroughput: {
+            ReadCapacityUnits: 1,
+            WriteCapacityUnits: 1
+          }
+        };
+        assert.isTrue(updateTableSpy.calledWith(expectedParams, sinon.match.func), 'should attempt update if an errors occur during table describe.');
+      });
+
     });
 
   });

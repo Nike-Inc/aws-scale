@@ -203,6 +203,12 @@ The following resources have extra feature properties that can be set on the par
     // After scaling this resource, the ASG will have minimum size and desired capacity set to zero.
     var asg = new scale.AutoScaleGroup(asgParams);
     ```
+* scale.DynamoDB
+    * params.ignoreUnchangedCapacityUpdates (Default: true) - AWS will throw an exception if table or global
+     index throughput matches current read/write values. This can be an annoyance if running Aws-Scale nightly
+     via lambda to reduce consumption. If tables are already scaled down, ignoreUnchangedCapacityUpdates set to true
+     will ignore any index or table updates that already match desired levels. If set to false, 
+     all updates will be sent to AWS even if they match what's currently set for the table.
 
 **AWS Authorization**
 
