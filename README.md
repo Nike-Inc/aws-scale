@@ -1,6 +1,6 @@
 # Aws-Scale
 
-[![Build Status](https://travis-ci.org/aaronbruckner/aws-scale.svg?branch=master)](https://travis-ci.org/aaronbruckner/aws-scale) [![Coverage Status](https://coveralls.io/repos/github/aaronbruckner/aws-scale/badge.svg?branch=master)](https://coveralls.io/github/aaronbruckner/aws-scale?branch=master) [![Known Vulnerabilities](https://snyk.io/test/github/aaronbruckner/aws-scale/badge.svg)](https://snyk.io/test/github/aaronbruckner/aws-scale)
+[![Build Status](https://travis-ci.org/aaronbruckner/aws-scale.svg?branch=master)](https://travis-ci.org/aaronbruckner/aws-scale) [![Coverage Status](https://coveralls.io/repos/github/aaronbruckner/aws-scale/badge.svg?branch=master)](https://coveralls.io/github/aaronbruckner/aws-scale?branch=master)
 
 ## AWS Scaling Made Simple.
 
@@ -160,8 +160,6 @@ err = [
 ```
 
 **Watch Scaling Status in Node**
-
-<img src="https://raw.githubusercontent.com/aaronbruckner/aws-scale/master/examplePollingOutput.png" width="400" height="600">
 
 If you're scaling resources via node locally, aws-scale can poll your newly scaled resources and tell you when they're ready for
 use. If you're a developer waiting for a stack to come online this is much easier than digging through the console. To
