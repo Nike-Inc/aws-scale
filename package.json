@@ -1,7 +1,7 @@
 {
   "name": "aws-scale",
   "description": "A simple module for scaling AWS resources together.",
-  "version": "1.2.4",
+  "version": "1.3.0",
   "keywords": [
     "aws scaling",
     "aws scale",
@@ -11,13 +11,6 @@
     "autoscaling"
   ],
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/aaronbruckner/aws-scale/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/aaronbruckner/aws-scale"
-  },
   "author": {
     "name": "Aaron Bruckner",
     "email": "aaronbruckner@gmail.com",
