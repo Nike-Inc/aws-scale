@@ -36,7 +36,8 @@ DynamoDB.prototype.getParams = function () {
 };
 
 /**
- * Gets the status of the scaling operation on the table.
+ * Gets the status of the scaling operation on the table. This will return a successful result when the table status
+ * and any global index statuses are all active.
  *
  * @param {function} callback - invoked once the current scale status is confirmed. Returns the following result
  * parameter:
@@ -69,19 +70,22 @@ DynamoDB.prototype.getScalingProgress = function(callback) {
       return callback(result);
     }
 
-    switch (data.Table.TableStatus) {
-      case 'UPDATING':
-        result.status = 'pending';
-        result.message = 'TableStatus: UPDATING';
-        break;
-      case 'ACTIVE':
-        result.status = 'success';
-        break;
-      case 'CREATING':
-      case 'DELETING':
-        result.status = 'failure';
-        result.error = 'Unexpected TableStatus: ' + data.Table.TableStatus;
-        break;
+    var globalIndexMessage = '';
+    var globalIndexesActive = true;
+    _.forEach(data.Table.GlobalSecondaryIndexes, function (globalIndex) {
+      globalIndexesActive = globalIndexesActive && globalIndex.IndexStatus === 'ACTIVE';
+      globalIndexMessage = globalIndexMessage + ' - ' + globalIndex.IndexName + ': ' + globalIndex.IndexStatus;
+    });
+
+    var tableStatus = data.Table.TableStatus;
+    if (tableStatus === 'UPDATING' || (tableStatus === 'ACTIVE' && !globalIndexesActive)) {
+      result.status = 'pending';
+      result.message = 'TableStatus: ' + tableStatus + globalIndexMessage;
+    } else if (tableStatus === 'ACTIVE') {
+      result.status = 'success';
+    } else {
+      result.status = 'failure';
+      result.error = 'Unexpected TableStatus: ' + tableStatus;
     }
 
     callback(result);

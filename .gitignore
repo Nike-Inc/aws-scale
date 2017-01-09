@@ -1,7 +1,5 @@
 aws-scale.iml
 node_modules/
-npm-debug.log
 coverage
 .coveralls.yml
-/src/test.js
-src/test.js
+test.js

@@ -1,5 +1,9 @@
 # Change Log
 
+### 1.3.1 - Jan 8, 2017
+* Fixed bug where DynamoDB scale status polling was ignoring the status of global indexes. Polling now waits for 
+both table and global index scaling to complete.
+
 ### 1.3.0 - Jan 5, 2017
 * Added ignoreUnchangedCapacityUpdates DynamoDB feature. DynamoDB will now ignore updates that already match current table throughput.
 Automatic scaling operations will not fail if the desired capacity is already set for the table or global indexes.

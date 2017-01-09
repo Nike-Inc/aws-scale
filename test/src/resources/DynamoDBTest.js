@@ -130,6 +130,93 @@ describe('DynamoDB', function () {
       assert.isTrue(callback.calledWith(expectedResult), 'should send correct result back');
     });
 
+    it('should return pending status if global indexes are still updating', function () {
+      dynamoDB.getScalingProgress(callback);
+
+      // Simulate response from AWS, global indexes still updating.
+      var awsResponse = {
+        Table: {
+          TableStatus: 'ACTIVE',
+          GlobalSecondaryIndexes: [
+            {
+              IndexName: 'index1',
+              IndexStatus: 'ACTIVE'
+            },
+            {
+              IndexName: 'index2',
+              IndexStatus: 'UPDATING'
+            }
+          ]
+        }
+      };
+      describeTableSpy.callArgWith(1, null, awsResponse);
+
+      assert.isTrue(callback.calledOnce, 'should invoke callback after response from AWS');
+      var expectedResult = {
+        type: 'DynamoDB',
+        name: 'testTableName',
+        status: 'pending',
+        message: 'TableStatus: ACTIVE - index1: ACTIVE - index2: UPDATING'
+      };
+      assert.isTrue(callback.calledWith(expectedResult), 'should send pending result if global indexes are updating');
+    });
+
+    it('should return pending status if global indexes and table are still updating', function () {
+      dynamoDB.getScalingProgress(callback);
+
+      // Simulate response from AWS, global indexes still updating.
+      var awsResponse = {
+        Table: {
+          TableStatus: 'UPDATING',
+          GlobalSecondaryIndexes: [
+            {
+              IndexName: 'index1',
+              IndexStatus: 'ACTIVE'
+            },
+            {
+              IndexName: 'index2',
+              IndexStatus: 'UPDATING'
+            }
+          ]
+        }
+      };
+      describeTableSpy.callArgWith(1, null, awsResponse);
+
+      assert.isTrue(callback.calledOnce, 'should invoke callback after response from AWS');
+      var expectedResult = {
+        type: 'DynamoDB',
+        name: 'testTableName',
+        status: 'pending',
+        message: 'TableStatus: UPDATING - index1: ACTIVE - index2: UPDATING'
+      };
+      assert.isTrue(callback.calledWith(expectedResult), 'should send pending result if global indexes and table are updating');
+    });
+
+    it('should return success if table AND global indexes are active', function () {
+      dynamoDB.getScalingProgress(callback);
+
+      var awsResponse = {
+        Table: {
+          TableStatus: 'ACTIVE',
+          GlobalSecondaryIndexes: [
+            {
+              IndexName: 'index1',
+              IndexStatus: 'ACTIVE'
+            }
+          ]
+        }
+      };
+      describeTableSpy.callArgWith(1, null, awsResponse);
+
+      assert.isTrue(callback.calledOnce, 'should invoke callback after response from AWS');
+      var expectedResult = {
+        type: 'DynamoDB',
+        name: 'testTableName',
+        status: 'success'
+      };
+      assert.isTrue(callback.calledWith(expectedResult), 'should send success result if global indexes and table are active');
+    });
+
     it('should return failure if error returned from AWS', function () {
       dynamoDB.getScalingProgress(callback);
 
