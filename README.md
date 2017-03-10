@@ -1,6 +1,6 @@
 # Aws-Scale
 
-[![Coverage Status](https://coveralls.io/repos/github/aaronbruckner/aws-scale/badge.svg?branch=master)](https://coveralls.io/github/aaronbruckner/aws-scale?branch=master)
+[![Build Status](https://travis-ci.org/Nike-Inc/aws-scale.svg?branch=master)](https://travis-ci.org/Nike-Inc/aws-scale) [![Coverage Status](https://coveralls.io/repos/github/Nike-Inc/aws-scale/badge.svg?branch=master)](https://coveralls.io/github/Nike-Inc/aws-scale?branch=master) [![Known Vulnerabilities](https://snyk.io/test/github/Nike-Inc/aws-scale/badge.svg)](https://snyk.io/test/github/Nike-Inc/aws-scale)
 
 ## AWS Scaling Made Simple.
 
@@ -113,6 +113,8 @@ resourceSet.scale();
 ```
 
 The script can be run via ```node webServiceScaleUp.js```. 
+
+<img src="https://raw.githubusercontent.com/Nike-Inc/aws-scale/master/examplePollingOutput.png" width="400" height="600">
 
 **Callback Return**
 
