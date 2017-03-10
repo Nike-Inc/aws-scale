@@ -1,7 +1,7 @@
 {
   "name": "aws-scale",
   "description": "A simple module for scaling AWS resources together.",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "keywords": [
     "aws scaling",
     "aws scale",
@@ -15,6 +15,10 @@
     "name": "Aaron Bruckner",
     "email": "aaron.bruckner@nike.com",
     "url": "http://aaronbruckner.com/"
+  },
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/Nike-Inc/aws-scale"
   },
   "main": "index.js",
   "scripts": {
