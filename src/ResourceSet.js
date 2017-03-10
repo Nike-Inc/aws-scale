@@ -5,6 +5,14 @@ var AutoScaleGroup = require('./resources/AutoScaleGroup');
 var clc = require('cli-color');
 
 /**
+ * Copyright 2016-present, Nike, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the MIT-style license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * -
+ *
  * Manages and scales a set of AWS resources together. The ResourceSet scales all the resources and reports the final
  * status of each scale operation once all have completed.
  *

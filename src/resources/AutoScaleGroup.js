@@ -3,6 +3,14 @@
 var AWS = require('aws-sdk');
 
 /**
+ * Copyright 2016-present, Nike, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the MIT-style license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * -
+ *
  * Scales an AWS auto scaling group.
  *
  * @param awsParams - parameter object for AWS SDK AutoScaling.setDesiredCapacity function.

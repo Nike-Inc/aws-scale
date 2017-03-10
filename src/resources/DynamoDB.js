@@ -4,6 +4,14 @@ var AWS = require('aws-sdk');
 var _ = require('lodash');
 
 /**
+ * Copyright 2016-present, Nike, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the MIT-style license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * -
+ *
  * Updates a DynamoDB table read/write throughput.
  *
  * @param awsParams - parameter object for AWS SDK DynamoDB.updateTable function.
