@@ -7,7 +7,7 @@ Welcome! Thank you for contributing to aws-scale.
 * Test Driven Development - I believe TDD leads to cleaner, less buggy code. As such, I'd encourage you
 to try TDD when contributing if you are not already doing so.
 * Security - it's vital this library maintains its security integrity. Always keep an eye out for vulnerabilities and
-please report anything you find either directly to me or via Github.
+please report anything you find either directly to me or via GitHub.
 
 ### Checklist
 
